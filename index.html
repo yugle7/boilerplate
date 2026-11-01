@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, shrink-to-fit=no, interactive-widget=resizes-content"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="theme-color" content="#f7f6f4" media="(prefers-color-scheme: light)"/>
+    <meta name="theme-color" content="#2a2a2a" media="(prefers-color-scheme: dark)"/>
+    <meta name="msapplication-config" content="none">
+
+    <title data-i18n="appName">Daybook</title>
+
+    <link rel="manifest" href="manifest.webmanifest"/>
+    <link rel="stylesheet" href="style.css"/>
+
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<!-- ==========================================================================
+     DIARY
+     ========================================================================== -->
+
+<section id="diary-page" class="width-500 safe">
+    <div id="calendar"></div>
+    <h3 id="chosen-day" class="accent center"></h3>
+    <div id="category-rings" class="row gap-10 pad-20"></div>
+    <div id="summary-rings" class="row gap-10 pad-20"></div>
+    <div id="day-entries"></div>
+    <div id="day-breakdown" class="h-list pad-20"></div>
+</section>
+
+<!-- ==========================================================================
+     EXPENSE ENTRY
+     ========================================================================== -->
+
+<section id="entry-page" class="hidden">
+    <div class="scroll">
+        <div class="width-500 col gap-20 pad-20 cta-space">
+            <header class="row gap-10">
+                <button id="entry-date" class="tap" aria-haspopup="dialog" data-i18n-aria-label="selectDate"></button>
+                <button id="entry-time" class="tap" aria-haspopup="dialog" data-i18n-aria-label="selectTime"></button>
+                <button id="entry-category" class="tap" data-i18n-aria-label="categoryLabel"></button>
+            </header>
+
+            <div class="input-row">
+                <div class="text-field">
+                    <textarea id="entry-text" class="input" rows="1" maxlength="200" autocomplete="off"
+                              data-i18n-placeholder="parsePlaceholder"
+                              data-i18n-aria-label="parsePlaceholder"></textarea>
+                    <button id="clear-text" class="clear hidden" data-i18n-aria-label="clear">
+                        <svg class="tool">
+                            <use href="sprite.svg#close"></use>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-actions">
+                    <button id="icon-photo" class="icon-button needs-photos" data-i18n-aria-label="photo">
+                        <svg class="tool">
+                            <use href="sprite.svg#camera"></use>
+                        </svg>
+                    </button>
+                    <button id="icon-voice" class="icon-button" data-i18n-aria-label="voice">
+                        <svg class="tool">
+                            <use href="sprite.svg#mic"></use>
+                        </svg>
+                    </button>
+                    <button id="icon-search" class="icon-button" data-i18n-aria-label="search">
+                        <svg class="tool">
+                            <use href="sprite.svg#search"></use>
+                        </svg>
+                    </button>
+                    <button id="icon-star" class="icon-button" data-i18n-aria-label="quickPicks">
+                        <svg class="tool">
+                            <use href="sprite.svg#star"></use>
+                        </svg>
+                    </button>
+                    <button id="icon-plus" class="icon-button" data-i18n-aria-label="add">
+                        <svg class="tool">
+                            <use href="sprite.svg#plus"></use>
+                        </svg>
+                    </button>
+                </div>
+                <input id="photo-input" type="file" accept="image/*" capture="environment" hidden>
+            </div>
+            <div id="entry-photo" class="photo hidden"></div>
+
+            <div class="col gap-10">
+                <div id="entry-items" class="col gap-10"></div>
+                <div class="row between pad-10" id="entry-total"></div>
+            </div>
+
+            <section>
+                <div class="row add">
+                    <h3 data-i18n="tags"></h3>
+                    <button id="edit-tags" class="right help small" data-i18n="change"></button>
+                </div>
+                <div id="tag-buttons" class="chips"></div>
+            </section>
+
+            <details id="note-block">
+                <summary>
+                    <svg class="plus" aria-hidden="true">
+                        <use href="sprite.svg#plus"></use>
+                    </svg>
+                    <svg class="minus" aria-hidden="true">
+                        <use href="sprite.svg#minus"></use>
+                    </svg>
+                    <span data-i18n="note"></span>
+                </summary>
+                <textarea id="entry-note" class="input" maxlength="280" rows="3"
+                          data-i18n-placeholder="notePlaceholder"></textarea>
+            </details>
+
+            <button id="entry-delete" class="red hidden" data-i18n="delete"></button>
+        </div>
+    </div>
+
+    <button id="confirm" class="fab-round" disabled aria-label="">
+        <svg>
+            <use href="sprite.svg#save"></use>
+        </svg>
+    </button>
+    <button id="cancel" class="fab-close" data-i18n-aria-label="close">
+        <svg>
+            <use href="sprite.svg#cancel"></use>
+        </svg>
+    </button>
+</section>
+
+<!-- ==========================================================================
+     PRESET
+     ========================================================================== -->
+
+<section id="preset-page" class="hidden">
+    <div class="scroll">
+        <div class="width-500 col gap-20 pad-20 cta-space">
+            <input id="preset-name" class="input" maxlength="80" autocomplete="off"
+                   data-i18n-placeholder="presetName" data-i18n-aria-label="presetName">
+
+            <label class="field">
+                <span class="label" data-i18n="defaultAmount"></span>
+                <span class="unit-field">
+                    <input id="preset-amount" class="input mono" inputmode="decimal">
+                    <span class="unit preset-currency"></span>
+                </span>
+            </label>
+
+            <div class="col gap-10">
+                <h3 data-i18n="category"></h3>
+                <div class="segment" id="preset-category" style="--n:4;--i:0">
+                    <button data-category="0" data-i18n="categoryFood"></button>
+                    <button data-category="1" data-i18n="categoryTransport"></button>
+                    <button data-category="2" data-i18n="categoryHome"></button>
+                    <button data-category="3" data-i18n="categoryOther"></button>
+                </div>
+            </div>
+
+            <div class="col gap-10">
+                <h3 data-i18n="tags"></h3>
+                <div id="preset-tags" class="chips"></div>
+            </div>
+
+            <button id="preset-archive" class="red hidden" data-i18n="delete"></button>
+        </div>
+    </div>
+
+    <button id="preset-save" class="fab-round" data-i18n-aria-label="save" disabled>
+        <svg>
+            <use href="sprite.svg#save"></use>
+        </svg>
+    </button>
+    <button id="preset-cancel" class="fab-close" data-i18n-aria-label="cancel">
+        <svg>
+            <use href="sprite.svg#cancel"></use>
+        </svg>
+    </button>
+</section>
+
+<!-- ==========================================================================
+     STATISTICS
+     ========================================================================== -->
+
+<section id="stats-page" class="width-500 pad-20 safe hidden">
+    <div id="period">
+        <div></div>
+        <button data-i="0" data-i18n="day"></button>
+        <button class="active" data-i="1" data-i18n="week"></button>
+        <button data-i="2" data-i18n="month"></button>
+    </div>
+
+    <div id="range">
+        <button type="button" data-add="-1" data-i18n-aria-label="previousPeriod">
+            <svg>
+                <use href="sprite.svg#prev"></use>
+            </svg>
+        </button>
+        <span id="range-label"></span>
+        <button type="button" data-add="1" data-i18n-aria-label="nextPeriod">
+            <svg>
+                <use href="sprite.svg#next"></use>
+            </svg>
+        </button>
+    </div>
+
+    <div class="card">
+        <h3><span data-i18n="spending"></span><span class="value help left-10 small"></span></h3>
+        <div class="chart" id="spending-chart"></div>
+    </div>
+
+    <div class="card">
+        <h3><span data-i18n="byCategory"></span><span class="value help left-10 small"></span></h3>
+        <div class="segment small-segment" id="category-mode" style="--n:2;--i:0">
+            <button data-mode="sum" class="active" data-i18n="amountMode"></button>
+            <button data-mode="pct" data-i18n="percentMode"></button>
+        </div>
+        <div class="chart" id="category-chart"></div>
+    </div>
+
+    <div class="card">
+        <h3><span data-i18n="budgetDifference"></span><span class="value help left-10 small"></span></h3>
+        <div class="chart" id="balance-chart"></div>
+    </div>
+
+    <div class="card">
+        <h3><span data-i18n="byTag"></span><span class="value help left-10 small"></span></h3>
+        <div class="chart" id="tag-chart"></div>
+    </div>
+
+    <div class="card">
+        <h3><span data-i18n="byWeekday"></span><span class="value help left-10 small"></span></h3>
+        <div class="chart" id="weekday-chart"></div>
+    </div>
+
+    <div class="card">
+        <h3 data-i18n="when"></h3>
+        <div class="chart" id="hour-heatmap"></div>
+    </div>
+
+    <div class="card">
+        <h3><span data-i18n="topPresets"></span><span class="value help left-10 small"></span></h3>
+        <div class="chart" id="top-chart"></div>
+    </div>
+
+    <div class="card">
+        <h3><span data-i18n="entries"></span><span class="value help left-10 small"></span></h3>
+        <div class="chart" id="count-chart"></div>
+    </div>
+</section>
+
+<!-- ==========================================================================
+     BUDGET
+     ========================================================================== -->
+
+<section id="budget-page" class="width-500 safe hidden">
+    <form id="budget-form" class="pad-20 col gap-30" novalidate autocomplete="off"
+          onsubmit="return false">
+        <div class="field">
+            <span class="label" data-i18n="currency"></span>
+            <div class="segment" id="currency" style="--n:3;--i:0">
+                <button type="button" data-currency="$">$</button>
+                <button type="button" data-currency="€">€</button>
+                <button type="button" data-currency="₽">₽</button>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label" for="monthly-budget" data-i18n="monthlyBudget"></label>
+            <div class="unit-field">
+                <input class="input mono" id="monthly-budget" type="text" inputmode="decimal"
+                       maxlength="9">
+                <span class="unit budget-currency"></span>
+            </div>
+        </div>
+
+        <span class="help small" data-i18n="categoryBudgets"></span>
+        <div class="grid-4">
+            <label class="field">
+                <span class="label" data-i18n="categoryFood"></span>
+                <input id="budget-food" class="input mono" inputmode="decimal">
+            </label>
+            <label class="field">
+                <span class="label" data-i18n="categoryTransport"></span>
+                <input id="budget-transport" class="input mono" inputmode="decimal">
+            </label>
+            <label class="field">
+                <span class="label" data-i18n="categoryHome"></span>
+                <input id="budget-home" class="input mono" inputmode="decimal">
+            </label>
+            <label class="field">
+                <span class="label" data-i18n="categoryOther"></span>
+                <input id="budget-other" class="input mono" inputmode="decimal">
+            </label>
+        </div>
+
+        <div class="row between pad-10" id="budget-summary"></div>
+    </form>
+</section>
+
+<!-- ==========================================================================
+     SETTINGS
+     ========================================================================== -->
+
+<section id="settings-page" class="width-500 safe hidden">
+    <br>
+    <a href="https://pay.cloudtips.ru/p/9e3a23d6" target="_blank" rel="noopener">
+        <svg class="icon">
+            <use href="sprite.svg#heart"></use>
+        </svg>
+        <span data-i18n="support"></span>
+    </a>
+
+    <a href="mailto:yuzhakov.gleb@gmail.com?subject=Daybook">
+        <svg class="icon">
+            <use href="sprite.svg#chat"></use>
+        </svg>
+        <span data-i18n="mailTo"></span>
+    </a>
+
+    <a href="privacy.html" target="_blank">
+        <svg class="icon">
+            <use href="sprite.svg#shield"></use>
+        </svg>
+        <span data-i18n="privacy"></span>
+    </a>
+
+    <br>
+    <button id="export">
+        <svg class="icon">
+            <use href="sprite.svg#download"></use>
+        </svg>
+        <span data-i18n="exportData"></span>
+    </button>
+
+    <button id="import">
+        <svg class="icon">
+            <use href="sprite.svg#upload"></use>
+        </svg>
+        <span data-i18n="importData"></span>
+    </button>
+    <input id="import-input" type="file" accept="application/json,.json" hidden>
+    <br>
+
+    <button id="reset">
+        <svg class="icon">
+            <use href="sprite.svg#reset"></use>
+        </svg>
+        <span data-i18n="reset"></span>
+    </button>
+</section>
+
+<!-- ==========================================================================
+     SHEETS
+     ========================================================================== -->
+
+<div id="overlay"></div>
+
+<div id="search-sheet" class="sheet tall full" role="dialog" aria-modal="true" data-i18n-aria-label="search">
+    <div class="row gap-10">
+        <button id="search-back" class="icon-button" data-i18n-aria-label="close">
+            <svg class="tool">
+                <use href="sprite.svg#prev"></use>
+            </svg>
+        </button>
+        <div class="text-field">
+            <input id="search-input" class="input" type="text" autocomplete="off" enterkeyhint="search"
+                   data-i18n-placeholder="searchPlaceholder" data-i18n-aria-label="search">
+            <button id="search-clear" class="clear" data-i18n-aria-label="clear">
+                <svg class="tool">
+                    <use href="sprite.svg#close"></use>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div id="search-tabs" class="chips scroll-x"></div>
+    <div id="search-results" class="sheet-scroll"></div>
+</div>
+
+<div id="portion-sheet" class="sheet" role="dialog" aria-modal="true" data-i18n-aria-label="portion">
+    <h3 id="portion-title" class="center" role="button" tabindex="0"></h3>
+    <div class="big-field">
+        <input id="portion-amount" class="mono" inputmode="decimal" autocomplete="off"
+               data-i18n-aria-label="amount">
+        <span class="preset-currency"></span>
+    </div>
+    <footer>
+        <div id="portion-quick" class="center">
+            <button id="portion-minus" class="pad-10" data-i18n-aria-label="minus">
+                <svg>
+                    <use href="sprite.svg#minus"></use>
+                </svg>
+            </button>
+            <button id="portion-plus" class="pad-10" data-i18n-aria-label="plus">
+                <svg>
+                    <use href="sprite.svg#plus"></use>
+                </svg>
+            </button>
+        </div>
+        <button id="portion-create" class="pad-10" data-i18n="create"></button>
+        <button id="portion-delete" class="pad-10" data-i18n="remove"></button>
+        <button id="portion-confirm" class="accent">OK</button>
+    </footer>
+</div>
+
+<div id="tags-sheet" class="sheet" role="dialog" aria-modal="true" data-i18n-aria-label="tags">
+    <div class="row">
+        <input id="tag" type="text" class="input" maxlength="24" autocomplete="off"
+               data-i18n-placeholder="newTag" data-i18n-aria-label="newTag">
+        <button id="create-tag" class="small accent pad-10" data-i18n="add"></button>
+    </div>
+
+    <div data-i18n="tagActions" class="small help pad-10"></div>
+    <div id="tag-actions" class="chips"></div>
+
+    <footer>
+        <button id="close-tags" class="right" data-i18n="cancel"></button>
+        <button id="apply-tags" class="accent">OK</button>
+    </footer>
+</div>
+
+<div id="when-picker" class="sheet" role="dialog" aria-modal="true" data-i18n-aria-label="selectTime">
+    <header id="watch">
+        <button id="day" class="tap"></button>
+        <button id="hour" class="tap"></button>
+
+        <svg viewBox="0 0 6 24" width="6" height="24" aria-hidden="true">
+            <circle cx="3" cy="8" r="1" stroke="var(--text)" fill="none"/>
+            <circle cx="3" cy="16" r="1" stroke="var(--text)" fill="none"/>
+        </svg>
+
+        <button id="minute" class="tap"></button>
+    </header>
+
+    <div id="clock">
+        <div id="white"></div>
+        <div id="black"></div>
+        <div id="center"></div>
+        <div id="line"></div>
+        <div id="hand"></div>
+    </div>
+
+    <div id="when-calendar">
+        <div class="days"></div>
+        <div class="days" id="when-days"></div>
+    </div>
+
+    <footer>
+        <button id="when-prev" data-i18n-aria-label="previous">
+            <svg>
+                <use href="sprite.svg#prev"></use>
+            </svg>
+        </button>
+
+        <button id="when-next" data-i18n-aria-label="next">
+            <svg>
+                <use href="sprite.svg#next"></use>
+            </svg>
+        </button>
+
+        <button id="close-when" class="right" data-i18n="cancel"></button>
+        <button id="apply-when" class="accent">OK</button>
+    </footer>
+</div>
+
+<div class="hidden">
+    <div id="calendars"></div>
+</div>
+
+<nav id="nav-bar" data-i18n-aria-label="mainNavigation">
+    <div id="nav">
+        <button id="nav-diary" data-page="diary" class="pad-10 active" data-i18n-aria-label="diary" aria-current="page">
+            <svg>
+                <use href="sprite.svg#diary"></use>
+            </svg>
+        </button>
+
+        <button id="add-entry" class="pad-10" data-i18n-aria-label="addEntry">
+            <svg>
+                <use href="sprite.svg#plus"></use>
+            </svg>
+        </button>
+
+        <button id="nav-stats" data-page="stats" class="pad-10" data-i18n-aria-label="stats">
+            <svg>
+                <use href="sprite.svg#stats"></use>
+            </svg>
+        </button>
+
+        <button id="nav-budget" data-page="budget" class="pad-10" data-i18n-aria-label="budget">
+            <svg>
+                <use href="sprite.svg#wallet"></use>
+            </svg>
+        </button>
+
+        <button id="nav-settings" data-page="settings" class="pad-10" data-i18n-aria-label="settings">
+            <svg>
+                <use href="sprite.svg#settings"></use>
+            </svg>
+        </button>
+    </div>
+</nav>
+
+<div id="modal" hidden>
+    <div class="dialog" role="dialog" aria-modal="true">
+        <p id="question"></p>
+        <div class="actions">
+            <button id="modal-yes"></button>
+            <button id="modal-no" data-i18n="no"></button>
+        </div>
+    </div>
+</div>
+
+<div id="chart-tip" role="tooltip" hidden></div>
+
+<script src="presets.js"></script>
+<script src="data.js"></script>
+<script src="script.js"></script>
+
+<script>
+    if (navigator.serviceWorker) {
+        // Reload only on update, not on first install
+        const hadController = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker
+            .register("sw.js", {
+                scope: "./",
+                updateViaCache: "none"
+            })
+            .then((reg) => {
+                reg.update();
+                if (reg.waiting) {
+                    reg.waiting.postMessage("skipWaiting");
+                }
+                navigator.serviceWorker.addEventListener(
+                    "controllerchange",
+                    () => hadController && window.location.reload()
+                );
+            });
+    }
+</script>
+
+</body>
+</html>
