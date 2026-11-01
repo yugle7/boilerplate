@@ -108,6 +108,9 @@ preset = {
 
 settings = {
   currency: "$",
+  birthdate: 19900101,     // YYYYMMDD, 0 when empty
+  sex: 1,                  // 0 female, 1 male
+  activity: 1.375,         // 1.2 ... 1.9
   monthlyBudget: 1500,
   categoryBudgets: [400, 150, 450, 200]
 }
@@ -195,7 +198,10 @@ Use these as patterns instead of reinventing them:
 - **Amount sheet** with increment/decrement, create-from-unmatched, delete.
 - **Preset editor** with custom presets, category segment, default amount and archive.
 - **Date/time picker** with calendar + draggable clock hand.
-- **Budget form** saved on blur with a computed daily budget and allocated total.
+- **Person page** with a masked DD.MM.YYYY birthdate input (cursor-aware editing,
+  deletion, paste and validation), a female/male segment, an activity range slider
+  with level labels, and the budget form saved on blur with a computed daily budget
+  and allocated total.
 - **SVG chart helpers**: line, stacked area, vertical bars, weekday bars, heatmap,
   horizontal bar list, legends and interactive tooltips.
 - **Photo pipeline**: file input, compression, IndexedDB, object URLs, cleanup.
@@ -284,7 +290,7 @@ Then check:
 - Create a preset from an unmatched line; edit/archive it; search and favorite it.
 - Toggle tags, notes, date/time picker, amount sheet and receipt photo.
 - Stats: Day/Week/Month, amounts/shares, tooltips, scroll all cards.
-- Budget: change currency, monthly budget and category limits; verify diary rings.
+- Person: enter a valid birthdate and check the mask/validation, switch sex, move the activity slider, change currency and budgets; verify diary rings.
 - Export, import, reset; confirm data survives reload.
 - Light and dark color schemes, 390px and desktop widths.
 - Offline reload after the service worker is active.

@@ -22,7 +22,7 @@ window.TRANSLATIONS = {
         diary: "Дневник",
         addEntry: "Добавить расход",
         stats: "Статистика",
-        budget: "Бюджет",
+        person: "Профиль",
         settings: "Настройки",
         previous: "Ранее",
         next: "Далее",
@@ -108,7 +108,13 @@ window.TRANSLATIONS = {
         close: "Закрыть",
         deletePresetQuestion: "Удалить шаблон? Старые записи не изменятся.",
 
-        /* --- Budget --- */
+        /* --- Person and budget --- */
+        birthdate: "Дата рождения",
+        sex: "Пол",
+        female: "Жен",
+        male: "Муж",
+        activity: "Активность",
+        activityLevels: ["Сидячая", "Легкая", "Средняя", "Высокая", "Экстремальная"],
         monthlyBudget: "Бюджет на месяц",
         categoryBudgets: "Лимиты по категориям",
         dailyBudget: "Бюджет на день",
@@ -192,7 +198,7 @@ window.TRANSLATIONS = {
         diary: "Diary",
         addEntry: "Add expense",
         stats: "Statistics",
-        budget: "Budget",
+        person: "Profile",
         settings: "Settings",
         previous: "Previous",
         next: "Next",
@@ -277,7 +283,13 @@ window.TRANSLATIONS = {
         close: "Close",
         deletePresetQuestion: "Delete this preset? Past records stay unchanged.",
 
-        /* --- Budget --- */
+        /* --- Person and budget --- */
+        birthdate: "Birth date",
+        sex: "Sex",
+        female: "Female",
+        male: "Male",
+        activity: "Activity",
+        activityLevels: ["Sedentary", "Lightly active", "Moderately active", "Very active", "Extra active"],
         monthlyBudget: "Monthly budget",
         categoryBudgets: "Category limits",
         dailyBudget: "Daily budget",

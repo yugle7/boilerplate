@@ -1,5 +1,5 @@
 const APP_PREFIX = "daybook";
-const CODE_VERSION = "2026-11-01e"; // matches version in manifest.webmanifest
+const CODE_VERSION = "2026-11-01g"; // matches version in manifest.webmanifest
 
 const STATIC_CACHE = `${APP_PREFIX}-${CODE_VERSION}`;
 

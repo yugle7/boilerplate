@@ -7,7 +7,7 @@
     "ru": "Офлайн-дневник расходов: быстрый ввод, поиск, теги, бюджеты и графики.",
     "en": "An offline daily expense journal: quick entry, search, tags, budgets and charts."
   },
-  "version": "2026-11-01e",
+  "version": "2026-11-01g",
   "scope": "./",
   "start_url": "./",
   "display": "standalone",

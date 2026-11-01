@@ -27,6 +27,9 @@ const PHOTO_MAX_WIDTH = 1280;
 const PHOTO_QUALITY = 0.82;
 
 const DEFAULT_SETTINGS = {
+    birthdate: 0,
+    sex: 1,
+    activity: 1.375,
     monthlyBudget: 1500,
     categoryBudgets: [400, 150, 450, 200],
 };
@@ -480,7 +483,7 @@ const pages = {
     entry: $("entry-page"),
     preset: $("preset-page"),
     stats: $("stats-page"),
-    budget: $("budget-page"),
+    person: $("person-page"),
     settings: $("settings-page"),
 };
 
@@ -490,7 +493,7 @@ const navLinks = {
     diary: $("nav-diary"),
     entry: $("add-entry"),
     stats: $("nav-stats"),
-    budget: $("nav-budget"),
+    person: $("nav-person"),
     settings: $("nav-settings"),
 };
 
@@ -583,8 +586,11 @@ const minuteButton = $("minute");
 const closeWhen = $("close-when");
 const applyWhen = $("apply-when");
 
-/* --- Budget --- */
-const budgetForm = $("budget-form");
+/* --- Person and budget --- */
+const birthdateInput = $("birthdate");
+const sexInput = $("sex");
+const activityInput = $("activity");
+const activityLevel = $("activity-level");
 const currencySegment = $("currency");
 const monthlyBudgetInput = $("monthly-budget");
 const categoryBudgetInputs = {
@@ -695,6 +701,9 @@ const loadSettings = () => {
     const stored = read("settings", null);
     settings = {
         currency: stored?.currency || S.currencySymbol,
+        birthdate: Number(stored?.birthdate) || 0,
+        sex: Number(stored?.sex ?? DEFAULT_SETTINGS.sex),
+        activity: Number(stored?.activity) || DEFAULT_SETTINGS.activity,
         monthlyBudget: Number(stored?.monthlyBudget) || DEFAULT_SETTINGS.monthlyBudget,
         categoryBudgets: CATEGORIES.map(
             (i) => Number(stored?.categoryBudgets?.[i]) || 0,
@@ -988,8 +997,8 @@ const renderPage = (name, withLink = true) => {
     else if (name === "stats") {
         renderRange();
         renderStats();
-    } else if (name === "budget") {
-        renderBudget();
+    } else if (name === "person") {
+        renderPerson();
     }
 };
 
@@ -2398,10 +2407,217 @@ presetArchive.onclick = () =>
     });
 
 // ==========================================================================
-// 21. BUDGET PAGE
+// 21. PERSON PAGE
 // ==========================================================================
 
-const renderBudget = () => {
+const birthdate = {digits: "", cursor: 0};
+const YY = new Date().getFullYear() % 100;
+
+const formatDate = () => {
+    if (!birthdate.digits) return "";
+    const d =
+        birthdate.digits.slice(0, 2) + (birthdate.digits.length >= 2 ? "." : "");
+    const m =
+        birthdate.digits.slice(2, 4) + (birthdate.digits.length >= 4 ? "." : "");
+    const y = birthdate.digits.slice(4);
+    return d + m + y;
+};
+
+const normalize = () => {
+    if (birthdate.cursor < birthdate.digits.length)
+        birthdate.digits = birthdate.digits.slice(0, birthdate.cursor);
+
+    if (+birthdate.digits[0] > 3) birthdate.digits = "0" + birthdate.digits;
+
+    if (birthdate.digits.length >= 2) {
+        const d = +birthdate.digits.slice(0, 2);
+        if (d > 31) birthdate.digits = "0" + birthdate.digits;
+        else if (d === 0) birthdate.digits = "01" + birthdate.digits.slice(2);
+    }
+
+    if (birthdate.digits.length >= 3 && +birthdate.digits[2] > 1)
+        birthdate.digits =
+            birthdate.digits.slice(0, 2) + "0" + birthdate.digits.slice(2);
+
+    if (birthdate.digits.length >= 4) {
+        const d = birthdate.digits.slice(0, 2);
+        const m = +birthdate.digits.slice(2, 4);
+        if (m > 12) birthdate.digits = d + "0" + birthdate.digits.slice(2);
+        else if (m === 0) birthdate.digits = d + "01" + birthdate.digits.slice(4);
+    }
+
+    if (birthdate.digits.length >= 6) {
+        const y = birthdate.digits.slice(4, 6);
+        if (y !== "19" && y !== "20") {
+            birthdate.digits =
+                birthdate.digits.slice(0, 4) + (+y <= YY ? "20" : "19") + y;
+        }
+    }
+
+    birthdate.digits = birthdate.digits.slice(0, 8);
+    birthdate.cursor = birthdate.digits.length;
+};
+
+const setValue = () => {
+    birthdateInput.value = formatDate();
+    let p = birthdate.cursor;
+    if (birthdate.cursor >= 2) p++;
+    if (birthdate.cursor >= 4) p++;
+    p = Math.min(p, birthdateInput.value.length);
+    birthdateInput.setSelectionRange(p, p);
+};
+
+const rawPosition = (p) =>
+    birthdateInput.value.slice(0, p).replace(/\D/g, "").length;
+
+birthdateInput.addEventListener("beforeinput", (e) => {
+    if (e.inputType === "insertText" && e.data === ".") {
+        e.preventDefault();
+        if (birthdate.cursor === 1) {
+            birthdate.digits = "0" + birthdate.digits;
+            birthdate.cursor = 2;
+            setValue();
+        } else if (birthdate.cursor === 3) {
+            birthdate.digits =
+                birthdate.digits.slice(0, 2) + "0" + birthdate.digits.slice(2);
+            birthdate.cursor = 4;
+            setValue();
+        }
+        return;
+    }
+
+    if (e.inputType === "insertText" || e.inputType === "insertFromPaste") {
+        e.preventDefault();
+        const p = (e.data || "").replace(/\D/g, "");
+        if (!p || birthdate.cursor >= 8) return;
+
+        birthdate.digits =
+            birthdate.digits.slice(0, birthdate.cursor) +
+            p +
+            birthdate.digits.slice(birthdate.cursor);
+        birthdate.cursor += p.length;
+        normalize();
+        setValue();
+        return;
+    }
+
+    if (e.inputType === "deleteContentBackward") {
+        e.preventDefault();
+        if (!birthdate.cursor) return;
+
+        if (birthdate.cursor === 8 && birthdate.digits.length === 8) {
+            const y = birthdate.digits.slice(4);
+            if (y.slice(0, 2) !== "19" && y.slice(0, 2) !== "20") {
+                birthdate.digits = birthdate.digits.slice(0, 4) + y.slice(2);
+                birthdate.cursor = 6;
+                setValue();
+                return;
+            }
+        }
+
+        birthdate.digits =
+            birthdate.digits.slice(0, birthdate.cursor - 1) +
+            birthdate.digits.slice(birthdate.cursor);
+        birthdate.cursor--;
+        normalize();
+        setValue();
+    }
+});
+
+birthdateInput.addEventListener("click", () => {
+    birthdate.cursor = rawPosition(birthdateInput.selectionStart);
+});
+
+birthdateInput.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        birthdate.cursor = Math.max(0, birthdate.cursor - 1);
+        setValue();
+    }
+    if (e.key === "ArrowRight") {
+        e.preventDefault();
+        birthdate.cursor = Math.min(8, birthdate.cursor + 1);
+        setValue();
+    }
+});
+
+birthdateInput.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const value = e.clipboardData.getData("text").trim();
+    const parts = value.split(/[.\-/\s]+/);
+
+    if (parts.length >= 3) {
+        let [d, m, y] = parts;
+        d = d.replace(/\D/g, "");
+        m = m.replace(/\D/g, "");
+        y = y.replace(/\D/g, "");
+
+        if (d.length === 1) d = "0" + d;
+        if (m.length === 1) m = "0" + m;
+
+        if (y.length === 1) y = "200" + y;
+        else if (y.length === 2) y = (+y <= YY ? "20" : "19") + y;
+        else y = y.slice(0, 4);
+
+        birthdate.digits = (d + m + y).slice(0, 8);
+    } else {
+        birthdate.digits = value.replace(/\D/g, "").slice(0, 8);
+        normalize();
+    }
+
+    birthdate.cursor = birthdate.digits.length;
+    setValue();
+});
+
+const getBirthdate = () => {
+    if (birthdate.digits.length !== 8) return false;
+
+    const d = +birthdate.digits.slice(0, 2);
+    const m = +birthdate.digits.slice(2, 4);
+    const y = +birthdate.digits.slice(4, 8);
+    const dst = new Date(y, m - 1, d);
+
+    if (dst.getFullYear() !== y ||
+        dst.getMonth() !== m - 1 ||
+        dst.getDate() !== d ||
+        dst > new Date()) return null;
+
+    return y * 10000 + m * 100 + d;
+};
+
+/* --- Activity slider --- */
+
+const ACTIVITY_LEVELS = [1.2, 1.375, 1.55, 1.725, 1.9];
+
+const renderActivityLevel = () => {
+    const i = ACTIVITY_LEVELS.reduce(
+        (best, l, j) =>
+            Math.abs(settings.activity - l) <
+            Math.abs(settings.activity - ACTIVITY_LEVELS[best])
+                ? j
+                : best,
+        0,
+    );
+    activityLevel.textContent = `${S.activityLevels[i]}`;
+    activityInput.style.setProperty("--value", `${settings.activity * 100 - 100}%`);
+};
+
+const renderPerson = () => {
+    if (settings.birthdate) {
+        const s = String(settings.birthdate);
+        birthdate.digits = s.slice(6, 8) + s.slice(4, 6) + s.slice(0, 4);
+        birthdate.cursor = birthdate.digits.length;
+        birthdateInput.value = formatDate();
+    } else {
+        birthdate.digits = "";
+        birthdate.cursor = 0;
+        birthdateInput.value = "";
+    }
+
+    setSegment(sexInput, settings.sex ? "male" : "female", "sex");
+    activityInput.value = settings.activity;
+    renderActivityLevel();
+
     monthlyBudgetInput.value = fmt(settings.monthlyBudget, 0);
     CATEGORIES.forEach((category) => {
         categoryBudgetInputs[category].value = fmt(
@@ -2418,7 +2634,8 @@ const renderBudget = () => {
         <div class="small help">${S.budgetSummary}: ${money(categoriesTotal)} / ${money(settings.monthlyBudget)}</div>`;
 };
 
-const applyBudgetForm = () => {
+const applyPersonForm = () => {
+    settings.birthdate = getBirthdate();
     settings.monthlyBudget =
         parseNumber(monthlyBudgetInput.value) ?? settings.monthlyBudget;
     CATEGORIES.forEach((category) => {
@@ -2428,11 +2645,30 @@ const applyBudgetForm = () => {
 
     saveSettings();
     invalidate();
-    renderBudget();
+    renderPerson();
     renderDiary();
 };
 
-budgetInputs.forEach((input) => input.addEventListener("blur", applyBudgetForm));
+[birthdateInput, ...budgetInputs].forEach((input) =>
+    input.addEventListener("blur", applyPersonForm),
+);
+
+onSegment(sexInput, "sex", (value) => {
+    settings.sex = value === "male" ? 1 : 0;
+    saveSettings();
+    renderPerson();
+});
+
+activityInput.addEventListener("input", () => {
+    settings.activity = +activityInput.value;
+    renderActivityLevel();
+});
+
+// Save the smooth slider on release, like the other fields
+activityInput.addEventListener("change", () => {
+    saveSettings();
+    renderPerson();
+});
 
 maskNumber(monthlyBudgetInput, 100000000, 0);
 CATEGORIES.forEach((category) =>
@@ -2443,7 +2679,7 @@ onSegment(currencySegment, "currency", (value) => {
     settings.currency = value;
     saveSettings();
     syncCurrencyText();
-    renderBudget();
+    renderPerson();
     renderDiary();
 });
 

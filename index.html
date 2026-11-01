@@ -252,12 +252,35 @@
 </section>
 
 <!-- ==========================================================================
-     BUDGET
+     PERSON
      ========================================================================== -->
 
-<section id="budget-page" class="width-500 safe hidden">
-    <form id="budget-form" class="pad-20 col gap-30" novalidate autocomplete="off"
+<section id="person-page" class="width-500 safe hidden">
+    <form id="person-form" class="pad-20 col gap-30" novalidate autocomplete="off"
           onsubmit="return false">
+        <div class="row gap-15">
+            <div class="field grow">
+                <label class="label" for="birthdate" data-i18n="birthdate"></label>
+                <input class="input mono" id="birthdate" name="birthdate" type="text" inputmode="numeric"
+                       autocomplete="off" autocapitalize="off" placeholder="31.12.2000" spellcheck="false"
+                       maxlength="10">
+            </div>
+            <div class="field grow">
+                <label class="label" data-i18n="sex"></label>
+                <div class="segment" id="sex" style="--n:2;--i:0">
+                    <button type="button" data-sex="female" class="active" data-i18n="female"></button>
+                    <button type="button" data-sex="male" data-i18n="male"></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="row gap-10" for="activity">
+                <span data-i18n="activity"></span> <span>—</span> <span id="activity-level"></span>
+            </label>
+            <input type="range" id="activity" min="1" max="2" step="0.025" value="1.375">
+        </div>
+
         <div class="field">
             <span class="label" data-i18n="currency"></span>
             <div class="segment" id="currency" style="--n:3;--i:0">
@@ -489,9 +512,9 @@
             </svg>
         </button>
 
-        <button id="nav-budget" data-page="budget" class="pad-10" data-i18n-aria-label="budget">
+        <button id="nav-person" data-page="person" class="pad-10" data-i18n-aria-label="person">
             <svg>
-                <use href="sprite.svg#wallet"></use>
+                <use href="sprite.svg#person"></use>
             </svg>
         </button>
 

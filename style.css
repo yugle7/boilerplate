@@ -1271,8 +1271,8 @@ nav > div > button {
     transform-origin: 0 50%;
 }
 
-/* Budget */
-#budget-form {
+/* Person and budget */
+#person-form {
     display: flex;
     flex-direction: column;
     width: 100%;
